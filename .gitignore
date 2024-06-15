@@ -1,9 +1,20 @@
+compile_commands.json
+
+# Vscode
+.vscode/
+
 # Xmake cache
 .xmake/
 build/
 
 # MacOS Cache
 .DS_Store
+
+# Image files
+*.png
+*.jpg
+*.bmp
+*.ppm
 
 # Prerequisites
 *.d
