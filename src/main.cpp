@@ -8,8 +8,22 @@
 #include "ray.hpp"
 #include "vec3.hpp"
 
+bool hitSphere(const Point3& center, double radius, const Ray& r)
+{
+    Vec3 oc = center - r.origin();
+    auto a = dot(r.direction(), r.direction());
+    auto b = -2.0 * dot(r.direction(), oc);
+    auto c = dot(oc, oc) - radius*radius;
+    auto discriminant = b*b - 4*a*c;
+    return (discriminant >= 0);
+}
+
 Colour rayColour(const Ray& r)
 {
+    if (hitSphere(Point3(0, 0, -1), 0.5, r)) {
+        return Colour(1, 0, 0);
+    }
+
     Vec3 unitDirection = unitVector(r.direction());
     auto a = 0.5*(unitDirection.y() + 1.0);
     return (1.0-a)*Colour(1.0, 1.0, 1.0) + a*Colour(0.5, 0.7, 1.0);
