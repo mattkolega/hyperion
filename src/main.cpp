@@ -5,19 +5,49 @@
 #include "stb_image_write.h"
 
 #include "colour.hpp"
+#include "ray.hpp"
 #include "vec3.hpp"
 
-int main(int argc, char** argv) {
-    constexpr int IMAGE_WIDTH = 256;
-    constexpr int IMAGE_HEIGHT = 256;
+Colour rayColour(const Ray& r)
+{
+    Vec3 unitDirection = unitVector(r.direction());
+    auto a = 0.5*(unitDirection.y() + 1.0);
+    return (1.0-a)*Colour(1.0, 1.0, 1.0) + a*Colour(0.5, 0.7, 1.0);
+}
+
+int main(int argc, char** argv)
+{
+    constexpr auto ASPECT_RATIO = 16.0 / 9.0;
+    constexpr int IMAGE_WIDTH = 400;
+    
+    constexpr int IMAGE_HEIGHT = (int(IMAGE_WIDTH / ASPECT_RATIO) < 1) ? 1 : int(IMAGE_WIDTH / ASPECT_RATIO);
+
     constexpr int CHANNEL_NUM = 3;  // Image is in RGB format
+
+    auto focalLength = 1.0;
+    auto viewportHeight = 2.0;
+    auto viewportWidth = viewportHeight * (double(IMAGE_WIDTH) / IMAGE_HEIGHT);
+    auto cameraCenter = Point3(0, 0, 0);
+
+    auto viewportU = Vec3(viewportWidth, 0, 0);
+    auto viewportV = Vec3(0, -viewportHeight, 0);
+
+    auto pixelDeltaU = viewportU / IMAGE_WIDTH;
+    auto pixelDeltaV = viewportV / IMAGE_HEIGHT;
+
+    auto viewportUpperLeft = cameraCenter - Vec3(0, 0, focalLength) - viewportU/2 - viewportV/2;
+    auto pixel00Loc = viewportUpperLeft + 0.5 * (pixelDeltaU + pixelDeltaV);
 
     std::vector<unsigned char> imageData {};
 
     for (int i = 0; i < IMAGE_HEIGHT; i++) {
         std::clog << "\rScanlines remaining: " << (IMAGE_HEIGHT - i) << ' ' << std::flush;
         for (int j = 0; j < IMAGE_WIDTH; j++) {
-            auto pixelColour = Colour(double(j)/(IMAGE_WIDTH-1), double(i)/(IMAGE_HEIGHT-1), 0);
+            auto pixelCenter = pixel00Loc + (j * pixelDeltaU) + (i * pixelDeltaV);
+            auto rayDirection = pixelCenter - cameraCenter;
+            Ray r(cameraCenter, rayDirection);
+
+            Colour pixelColour = rayColour(r);
             writeColour(imageData, pixelColour);
         }
     }
